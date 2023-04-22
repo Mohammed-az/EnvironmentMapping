@@ -41,6 +41,11 @@ public:
         AppModel(LENNY_GUI_TESTAPP_FOLDER "/config/widowx/Base.stl", Eigen::Vector3d(0.5, 0.5, 0.0), Eigen::QuaternionD(tools::utils::rotX(-PI / 2.0)), 0.003),
         AppModel(LENNY_GUI_TESTAPP_FOLDER "/config/spot/Body.dae", Eigen::Vector3d(1.0, 0.5, 0.0), Eigen::QuaternionD::Identity(), 1.0)};
     AppModel* selectedModel = nullptr;
+
+    //Environment
+    std::vector<gui::Model::Mesh> skybox;
+    void loadSkybox();
+    void drawSkybox() const;
 };
 
 }  // namespace lenny
