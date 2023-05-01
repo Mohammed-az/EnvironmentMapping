@@ -37,6 +37,9 @@ uniform Material material;
 uniform bool useTexture;
 uniform sampler2D texture_diffuse;
 
+uniform bool useCubemap;
+uniform samplerCube texture_cubemap;
+
 vec3 getLightDir(){
     return normalize((cameraPosition + lightPosition) - FragPos);
 }
@@ -76,6 +79,12 @@ vec3 computeGlowDirection(vec3 direction, vec3 color, vec3 normal) {
 
 void main()
 {
+    //Use texturing without shading for skybox
+    if (!useCubemap) {
+        FragColor = texture(texture_diffuse, TexCoords);
+        return;
+    }
+
     vec3 viewDir = normalize(cameraPosition - FragPos);
     vec3 norm = normalize(Normal);
 
@@ -95,5 +104,17 @@ void main()
         vec3 color = computeBasicShading() * objectColor;
         color += computeGlowDirection(-viewDir, lightGlow, norm)* color;
         FragColor = vec4(color, objectAlpha);
+    }
+
+    //Environment mapping
+    if (useCubemap) {
+        //Ray from camera position towards surface position
+        vec3 rayDir = normalize(FragPos - cameraPosition);
+
+        //Ray reflection using surface normal
+        rayDir = reflect(rayDir, norm);
+
+        //Get environment color from the cubemap
+        FragColor = texture(texture_cubemap, rayDir);
     }
 }

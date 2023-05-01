@@ -44,6 +44,7 @@ public:
 
     //Environment
     std::vector<gui::Model::Mesh> skybox;
+    std::optional<uint> texture_cubemap = std::nullopt;
     void loadSkybox();
     void drawSkybox() const;
 };
