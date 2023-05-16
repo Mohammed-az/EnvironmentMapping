@@ -27,7 +27,7 @@ Solved various issues like properly controlling cubemap application
 on different objects, unbinding cubemap texture after loading to avoid
 OpenGL errors, removing shading from the skybox, etc. - 3 hours.
 
-Week 4:
+Week 4+5:
  
 Started to combine environment color and fragment color.
 Researched various sources - there is no established approach.
