@@ -1,18 +1,17 @@
-#include <glad/glad.h>
-#include <lenny/gui/Renderer.h>
-#include <lenny/gui/Shaders.h>
 #include "TestApp.h"
 
+#include <glad/glad.h>
 #include <lenny/gui/Guizmo.h>
 #include <lenny/gui/ImGui.h>
-
+#include <lenny/gui/Renderer.h>
+#include <lenny/gui/Shaders.h>
 #include <stb_image.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace lenny {
 
-uint loadTexture(const std::string &filePath) {
+uint loadTexture(const std::string& filePath) {
     //Create a new 2D texture
     uint textureID;
     glGenTextures(1, &textureID);
@@ -22,7 +21,7 @@ uint loadTexture(const std::string &filePath) {
 
     //Load the image
     int width, height, nrComponents;
-    unsigned char *data = stbi_load(filePath.c_str(), &width, &height, &nrComponents, 0);
+    unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &nrComponents, 0);
     if (data) {
         GLenum format = 0;
         if (nrComponents == 1)
@@ -51,7 +50,7 @@ uint loadTexture(const std::string &filePath) {
     return textureID;
 }
 
-uint loadCubemapTexture(std::vector<std::string> &filenames) {
+uint loadCubemapTexture(std::vector<std::string>& filenames) {
     //Create a new cubemap texture
     uint textureID;
     glGenTextures(1, &textureID);
@@ -63,7 +62,7 @@ uint loadCubemapTexture(std::vector<std::string> &filenames) {
     for (int i = 0; i < 6; i++) {
         //Load the image
         int width, height, nrComponents;
-        unsigned char *data = stbi_load(filenames[i].c_str(), &width, &height, &nrComponents, 0);
+        unsigned char* data = stbi_load(filenames[i].c_str(), &width, &height, &nrComponents, 0);
         if (data) {
             GLenum format = 0;
             if (nrComponents == 1)
@@ -112,12 +111,12 @@ void TestApp::loadSkybox() {
     //Skybox textures
     std::vector<std::string> filenames = {
         //Use ordering of cube sides according to cubemap constants in glad.h
-        LENNY_GUI_TESTAPP_FOLDER "/config/envmap/right.png",  // GL_TEXTURE_CUBE_MAP_POSITIVE_X
-        LENNY_GUI_TESTAPP_FOLDER "/config/envmap/left.png",   // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
-        LENNY_GUI_TESTAPP_FOLDER "/config/envmap/top.png",    // GL_TEXTURE_CUBE_MAP_POSITIVE_Y
-        LENNY_GUI_TESTAPP_FOLDER "/config/envmap/bottom.png", // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
-        LENNY_GUI_TESTAPP_FOLDER "/config/envmap/front.png",  // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
-        LENNY_GUI_TESTAPP_FOLDER "/config/envmap/back.png"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+        LENNY_GUI_TESTAPP_FOLDER "/config/envmap/right.png",   // GL_TEXTURE_CUBE_MAP_POSITIVE_X
+        LENNY_GUI_TESTAPP_FOLDER "/config/envmap/left.png",    // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+        LENNY_GUI_TESTAPP_FOLDER "/config/envmap/top.png",     // GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+        LENNY_GUI_TESTAPP_FOLDER "/config/envmap/bottom.png",  // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+        LENNY_GUI_TESTAPP_FOLDER "/config/envmap/front.png",   // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+        LENNY_GUI_TESTAPP_FOLDER "/config/envmap/back.png"     // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     };
 
     //Vertices for a square side of the skybox, each containing position, normal, texCoords
@@ -129,10 +128,7 @@ void TestApp::loadSkybox() {
     };
 
     //Indices for 2 triangles per skybox side
-    std::vector<uint> indices = {
-        0, 1, 2,
-        0, 2, 3
-    };
+    std::vector<uint> indices = {0, 1, 2, 0, 2, 3};
 
     //Create 6 skybox meshes for each side of the skybox
     for (std::string& filename : filenames) {
@@ -189,12 +185,14 @@ void TestApp::drawSkybox() const {
 void TestApp::drawScene() const {
     //Draw skybox without environment mapping
     gui::Shaders::activeShader->activate();
-    gui::Shaders::activeShader->setBool("useCubemap", false);
+    gui::Shaders::activeShader->setBool("enableEnvironmentMapping", enableEnvironmentMapping);
+    gui::Shaders::activeShader->setInt("environmentMappingType", environmentMappingType);
+    gui::Shaders::activeShader->setBool("isSkybox", true);
     drawSkybox();
+    gui::Shaders::activeShader->setBool("isSkybox", false);
 
     //Activate cubemap texture unit
     if (texture_cubemap.has_value()) {
-        gui::Shaders::activeShader->setBool("useCubemap", true);
         glActiveTexture(GL_TEXTURE1);
         glUniform1i(glGetUniformLocation(gui::Shaders::activeShader->getID(), "texture_cubemap"), 1);
         glBindTexture(GL_TEXTURE_CUBE_MAP, texture_cubemap.value());
@@ -208,18 +206,37 @@ void TestApp::drawScene() const {
         model.mesh.draw(model.position, model.orientation, model.scale, modelColor, rendererColor[3]);
 
     //Draw a reference sphere to better see the reflections
-    gui::Renderer::I->drawSphere(Eigen::Vector3d(-2, 0, 1), 1.0, Eigen::Vector4d(1, 1, 1, 1));
+    if (showReferenceSphere)
+        gui::Renderer::I->drawSphere(Eigen::Vector3d(-2, 0, 1), 1.0, Eigen::Vector4d(0.6, 0.6, 0.6, 1));
 
     //Disable environment mapping for ground
-    gui::Shaders::activeShader->setBool("useCubemap", false);
+    gui::Shaders::activeShader->setBool("enableEnvironmentMapping", false);
 }
 
 void TestApp::drawGui() {
     ImGui::Begin("Menu");
 
-    ImGui::Checkbox("Show Materials", &showMaterials);
+    ImGui::Checkbox("Show materials", &showMaterials);
     if (!showMaterials)
-        ImGui::ColorPicker4("Renderer Color", rendererColor);
+        ImGui::ColorPicker4("Renderer color", rendererColor);
+
+    ImGui::Checkbox("Show reference sphere", &showReferenceSphere);
+
+    ImGui::Separator();
+
+    //Checkbox for environment mapping
+    ImGui::Checkbox("Enable environment mapping", &enableEnvironmentMapping);
+
+    if (enableEnvironmentMapping) {
+        //Radio buttons for environment mapping type
+        ImGui::Text("Mapping type");
+        ImGui::Indent();
+        ImGui::RadioButton("Add", &environmentMappingType, 0);
+        ImGui::RadioButton("Multiply", &environmentMappingType, 1);
+        ImGui::RadioButton("Average", &environmentMappingType, 2);
+        ImGui::RadioButton("Mix", &environmentMappingType, 3);
+        ImGui::Unindent();
+    }
 
     ImGui::End();
 }

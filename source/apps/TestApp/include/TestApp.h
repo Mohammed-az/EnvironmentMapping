@@ -23,6 +23,10 @@ public:
     Eigen::Vector4d rendererColor = Eigen::Vector4d(0.75, 0.75, 0.75, 1.0);
     bool showMaterials = true;
 
+    bool showReferenceSphere = false;
+    bool enableEnvironmentMapping = true;
+    int environmentMappingType = 3;
+
     struct AppModel {
         AppModel(const std::string& filePath, const Eigen::Vector3d& position, const Eigen::QuaternionD& orientation, const double& scale)
             : mesh(filePath), position(position), orientation(orientation), scale(scale * Eigen::Vector3d::Ones()) {}
