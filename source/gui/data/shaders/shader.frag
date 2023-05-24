@@ -37,7 +37,9 @@ uniform Material material;
 uniform bool useTexture;
 uniform sampler2D texture_diffuse;
 
-uniform bool useCubemap;
+uniform bool isSkybox;
+uniform bool enableEnvironmentMapping;
+uniform int environmentMappingType;
 uniform samplerCube texture_cubemap;
 
 vec3 getLightDir(){
@@ -80,7 +82,7 @@ vec3 computeGlowDirection(vec3 direction, vec3 color, vec3 normal) {
 void main()
 {
     //Use texturing without shading for skybox
-    if (!useCubemap) {
+    if (isSkybox) {
         FragColor = texture(texture_diffuse, TexCoords);
         return;
     }
@@ -88,7 +90,7 @@ void main()
     vec3 viewDir = normalize(cameraPosition - FragPos);
     vec3 norm = normalize(Normal);
 
-    if (useTexture == true){
+    if (useTexture == true) {
         vec3 color = computeBasicShading();
         color += computeGlowDirection(-viewDir, lightGlow, norm)* color;
         FragColor = vec4(color, objectAlpha) * texture(texture_diffuse, TexCoords);
@@ -107,7 +109,7 @@ void main()
     }
 
     //Environment mapping
-    if (useCubemap) {
+    if (enableEnvironmentMapping) {
         //Ray from camera position towards surface position
         vec3 rayDir = normalize(FragPos - cameraPosition);
 
@@ -115,6 +117,19 @@ void main()
         rayDir = reflect(rayDir, norm);
 
         //Get environment color from the cubemap
-        FragColor = texture(texture_cubemap, rayDir);
+        vec4 envColor = texture(texture_cubemap, rayDir);
+
+        // fragment brightness;
+        float brightness = clamp((FragColor.r + FragColor.g + FragColor.b) / 3.0, 0.0, 1.0);
+
+        //Combine environment color with fragment color
+        if (environmentMappingType == 0)                    //Add type
+            FragColor = FragColor + envColor * 0.25;
+        else if (environmentMappingType == 1)               //Multiply type
+            FragColor = FragColor * envColor;
+        else if (environmentMappingType == 2)               //Average type
+            FragColor = (FragColor + envColor) / 2.0;
+        else if (environmentMappingType == 3)               //Mix type
+            FragColor = mix(FragColor, envColor, brightness);
     }
 }
