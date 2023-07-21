@@ -3,6 +3,9 @@
 #include <lenny/gui/Application.h>
 #include <lenny/gui/Model.h>
 
+#include "DynamicCubemap.h"
+#include "StaticCubemap.h"
+
 namespace lenny {
 
 class TestApp : public gui::Application {
@@ -11,7 +14,7 @@ public:
     ~TestApp() = default;
 
     //--- Drawing
-    void drawScene() const;
+    void drawScene();
     void drawGui() override;
     void drawGuizmo() override;
 
@@ -23,8 +26,9 @@ public:
     Eigen::Vector4d rendererColor = Eigen::Vector4d(0.75, 0.75, 0.75, 1.0);
     bool showMaterials = true;
 
-    bool showReferenceSphere = false;
+    bool showReferenceSphere = true;
     bool enableEnvironmentMapping = true;
+    bool enableDynamicReflections = true;
     int environmentMappingType = 3;
 
     struct AppModel {
@@ -43,14 +47,17 @@ public:
         AppModel(LENNY_GUI_TESTAPP_FOLDER "/config/nao/12211_Robot_l2.obj", Eigen::Vector3d(0.0, 0.5, 0.0), Eigen::QuaternionD(tools::utils::rotX(-PI / 2.0)),
                  0.03),
         AppModel(LENNY_GUI_TESTAPP_FOLDER "/config/widowx/Base.stl", Eigen::Vector3d(0.5, 0.5, 0.0), Eigen::QuaternionD(tools::utils::rotX(-PI / 2.0)), 0.003),
-        AppModel(LENNY_GUI_TESTAPP_FOLDER "/config/spot/Body.dae", Eigen::Vector3d(1.0, 0.5, 0.0), Eigen::QuaternionD::Identity(), 1.0)};
+        AppModel(LENNY_GUI_TESTAPP_FOLDER "/config/spot/Body.dae", Eigen::Vector3d(1.0, 0.5, 0.0), Eigen::QuaternionD::Identity(), 1.0),
+        AppModel(LENNY_GUI_OPENGL_FOLDER "/data/meshes/sphere.obj", Eigen::Vector3d(-2, 1, 1), Eigen::QuaternionD::Identity(), 2.0)};
     AppModel* selectedModel = nullptr;
 
-    //Environment
+    //Environment mapping
     std::vector<gui::Model::Mesh> skybox;
-    std::optional<uint> texture_cubemap = std::nullopt;
-    void loadSkybox();
+    StaticCubemap staticCubemap;
+    DynamicCubemap dynamicCubemap;
+    void loadSkybox(std::vector<std::string>& filenames);
     void drawSkybox() const;
+    void updateDynamicCubemap(int modelIndex);
 };
 
 }  // namespace lenny
