@@ -45,24 +45,3 @@ Studied imgui_demo.cpp for examples of radio buttons, indentation, etc.
 Added interface elements to the program's menu to control graphics settings.
 Reorganized uniform flags to correctly work for all user choices.
 4 hours total.
-
-Rest of the time ( Had Exam period)
-
-Work progress:
- 
-Studied articles about dynamic reflections using environment mapping (3 hours).
- 
-Implemented the cubemap with dynamic updates (8 hours).
- 
-Restoring the default framebuffer after rendering the dynamic cubemap didn't work.
-After studying the LennyGraphics engine, it turned out
-that it uses a custom framebuffer instead of default.
-A solution was found to query and save the current framebuffer ID
-before updating the cubemap and then restore its binding afterwards (6 hours).
- 
-Each model should have its own reflections, different from other models.
-Restructured the code to update the cubemap for each model,
-using the model's position as a point of view (2 hours).
- 
-Made sure the model is not rendered when updating its cubemap
-to avoid problems with self-reflections (1 hour).
